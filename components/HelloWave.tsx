@@ -7,6 +7,8 @@ import Animated, { runOnJS, useAnimatedGestureHandler, useAnimatedStyle, useShar
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SWIPE_THRESHOLD = 0.25 * SCREEN_WIDTH;
 
+const SPRING_CONFIG = { damping: 15, stiffness: 250, mass: 1, overshootClamping: true };
+
 export type Profile = {
   id: string;
   name: string;
@@ -39,18 +41,18 @@ export function SwipeableCard({ profile, onSwipeLeft, onSwipeRight, children }: 
     },
     onEnd: (event) => {
       if (event.translationX > SWIPE_THRESHOLD) {
-        translateX.value = withSpring(SCREEN_WIDTH, {}, () => {
-          cardOpacity.value = withSpring(0);
+        translateX.value = withSpring(SCREEN_WIDTH, SPRING_CONFIG, () => {
+          cardOpacity.value = withSpring(0, SPRING_CONFIG);
           runOnJS(onSwipeRight ?? (() => {}))(profile);
         });
       } else if (event.translationX < -SWIPE_THRESHOLD) {
-        translateX.value = withSpring(-SCREEN_WIDTH, {}, () => {
-          cardOpacity.value = withSpring(0);
+        translateX.value = withSpring(-SCREEN_WIDTH, SPRING_CONFIG, () => {
+          cardOpacity.value = withSpring(0, SPRING_CONFIG);
           runOnJS(onSwipeLeft ?? (() => {}))(profile);
         });
       } else {
-        translateX.value = withSpring(0);
-        rotate.value = withSpring(0);
+        translateX.value = withSpring(0, SPRING_CONFIG);
+        rotate.value = withSpring(0, SPRING_CONFIG);
       }
     },
   });
