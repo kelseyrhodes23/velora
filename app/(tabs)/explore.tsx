@@ -1,110 +1,388 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 
-export default function TabTwoScreen() {
+type Message = {
+  id: string;
+  text: string;
+  sender: 'user' | 'ai';
+  timestamp: Date;
+};
+
+type ProfileQuestion = {
+  id: string;
+  emoji: string;
+  question: string;
+  purpose: string;
+  options: string[];
+  answer?: string | string[];
+  multiSelect: boolean;
+  maxSelections?: number;
+};
+
+const profileQuestions: ProfileQuestion[] = [
+  {
+    id: '1',
+    emoji: '🔑',
+    question: 'What are you looking for?',
+    purpose: 'Establish intent compatibility.',
+    options: ['Long-term relationship', 'Marriage', 'Casual dating', 'Friendship', 'Not sure yet'],
+    multiSelect: true,
+    maxSelections: 2,
+  },
+  {
+    id: '2',
+    emoji: '🧠',
+    question: 'What are your core values?',
+    purpose: 'Match based on life philosophy and beliefs.',
+    options: ['Faith/spirituality', 'Family', 'Ambition', 'Kindness', 'Integrity', 'Humor', 'Independence', 'Creativity', 'Adventure', 'Simplicity'],
+    multiSelect: true,
+    maxSelections: 3,
+  },
+  {
+    id: '3',
+    emoji: '🗓️',
+    question: 'What does a typical weekend look like for you?',
+    purpose: 'Gauge lifestyle and activity compatibility.',
+    options: ['Outdoors/adventure', 'Gym/fitness', 'Netflix & relax', 'Social gatherings', 'Church/faith-based events', 'Creative projects', 'Travel'],
+    multiSelect: true,
+    maxSelections: 3,
+  },
+  {
+    id: '4',
+    emoji: '💼',
+    question: 'What best describes your current lifestyle?',
+    purpose: 'Helps match by work-life balance and stability.',
+    options: ['Career-focused', 'Student', 'Entrepreneur', 'Stay-at-home', 'Balanced lifestyle', 'In transition'],
+    multiSelect: true,
+    maxSelections: 2,
+  },
+  {
+    id: '5',
+    emoji: '✝️',
+    question: 'Do your faith or spiritual beliefs play a role in your life?',
+    purpose: 'Crucial for value-aligned matching.',
+    options: ['Very important', 'Somewhat important', 'Not important', 'Prefer not to say'],
+    multiSelect: false,
+  },
+  {
+    id: '6',
+    emoji: '👪',
+    question: 'Do you want kids (or more kids) someday?',
+    purpose: 'Align future life goals.',
+    options: ['Yes', 'No', 'Maybe', 'Already have kids'],
+    multiSelect: true,
+    maxSelections: 2,
+  },
+  {
+    id: '7',
+    emoji: '🌍',
+    question: 'Are you open to relocating for love?',
+    purpose: 'Prevent geographic dealbreakers.',
+    options: ['Yes', 'Maybe', 'No'],
+    multiSelect: false,
+  },
+  {
+    id: '8',
+    emoji: '🤝',
+    question: 'What are three things non-negotiable in a partner?',
+    purpose: 'Allows AI to use user-defined dealbreakers in matching.',
+    options: [],
+    multiSelect: false,
+  },
+];
+
+export default function AIProfileCreationScreen() {
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
+  const [inputText, setInputText] = useState('');
+
+  const currentQuestion = profileQuestions[currentQuestionIndex];
+
+  const handleAnswer = (answer: string) => {
+    if (currentQuestion.multiSelect) {
+      setAnswers(prev => {
+        const currentAnswers = (prev[currentQuestion.id] as string[]) || [];
+        const maxSelections = currentQuestion.maxSelections || 1;
+        
+        if (currentAnswers.includes(answer)) {
+          // Remove the answer if already selected
+          return {
+            ...prev,
+            [currentQuestion.id]: currentAnswers.filter(a => a !== answer)
+          };
+        } else if (currentAnswers.length < maxSelections) {
+          // Add the answer if under max selections
+          return {
+            ...prev,
+            [currentQuestion.id]: [...currentAnswers, answer]
+          };
+        }
+        return prev;
+      });
+    } else {
+      setAnswers(prev => ({
+        ...prev,
+        [currentQuestion.id]: answer
+      }));
+      if (currentQuestionIndex < profileQuestions.length - 1) {
+        setCurrentQuestionIndex(prev => prev + 1);
+      }
+    }
+  };
+
+  const handleNext = () => {
+    if (currentQuestionIndex < profileQuestions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+    }
+  };
+
+  const handleCustomAnswer = () => {
+    if (!inputText.trim()) return;
+    handleAnswer(inputText);
+    setInputText('');
+  };
+
+  const isOptionSelected = (option: string) => {
+    const answer = answers[currentQuestion.id];
+    if (Array.isArray(answer)) {
+      return answer.includes(option);
+    }
+    return answer === option;
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
+    <LinearGradient colors={["#f8fafc", "#e0e7ef", "#c7d2fe"]} style={styles.gradientBg}>
+      <View style={styles.safeArea}>
+        <View style={styles.progressContainer}>
+          <ThemedText style={styles.progressText}>
+            {currentQuestionIndex + 1} of {profileQuestions.length}
           </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+          <View style={styles.progressBar}>
+            <View 
+              style={[
+                styles.progressFill, 
+                { width: `${((currentQuestionIndex + 1) / profileQuestions.length) * 100}%` }
+              ]} 
+            />
+          </View>
+        </View>
+
+        <ScrollView 
+          style={styles.container}
+          contentContainerStyle={styles.contentContainer}
+          showsVerticalScrollIndicator={true}
+        >
+          <View style={styles.questionContainer}>
+            <View style={styles.emojiContainer}>
+              <ThemedText style={styles.emoji}>{currentQuestion.emoji}</ThemedText>
+            </View>
+            <ThemedText style={styles.question}>{currentQuestion.question}</ThemedText>
+            <ThemedText style={styles.purpose}>{currentQuestion.purpose}</ThemedText>
+            
+            {currentQuestion.multiSelect && (
+              <ThemedText style={styles.selectionHint}>
+                Select up to {currentQuestion.maxSelections} options
+              </ThemedText>
+            )}
+
+            {currentQuestion.options.length > 0 ? (
+              <>
+                <View style={styles.optionsContainer}>
+                  {currentQuestion.options.map((option, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={[
+                        styles.optionButton,
+                        isOptionSelected(option) && styles.selectedOption,
+                      ]}
+                      onPress={() => handleAnswer(option)}
+                    >
+                      <ThemedText style={[
+                        styles.optionText,
+                        isOptionSelected(option) && styles.selectedOptionText,
+                      ]}>
+                        {option}
+                      </ThemedText>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                {currentQuestion.multiSelect && (
+                  <TouchableOpacity
+                    style={styles.nextButton}
+                    onPress={handleNext}
+                  >
+                    <ThemedText style={styles.nextButtonText}>Next</ThemedText>
+                  </TouchableOpacity>
+                )}
+              </>
+            ) : (
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  value={inputText}
+                  onChangeText={setInputText}
+                  placeholder="Type your answer..."
+                  placeholderTextColor="#808080"
+                  multiline
+                />
+                <TouchableOpacity onPress={handleCustomAnswer} style={styles.sendButton}>
+                  <IconSymbol
+                    size={24}
+                    name="arrow.up.circle.fill"
+                    color="#6366f1"
+                  />
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </ScrollView>
+      </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  gradientBg: {
+    flex: 1,
   },
-  titleContainer: {
+  safeArea: {
+    flex: 1,
+    paddingTop: 60, // Adjust for iPhone notch
+  },
+  progressContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+  },
+  progressText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  progressBar: {
+    width: '100%',
+    height: 4,
+    backgroundColor: '#e0e7ef',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#6366f1',
+    borderRadius: 2,
+  },
+  container: {
+    flex: 1,
+  },
+  contentContainer: {
+    padding: 20,
+    paddingBottom: 100,
+  },
+  questionContainer: {
+    alignItems: 'center',
+    paddingBottom: 20,
+  },
+  emojiContainer: {
+    width: 80,
+    height: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  emoji: {
+    fontSize: 56,
+    lineHeight: 80,
+    textAlign: 'center',
+  },
+  question: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  purpose: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#666',
+    marginBottom: 20,
+  },
+  selectionHint: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 16,
+    fontStyle: 'italic',
+  },
+  optionsContainer: {
+    width: '100%',
+    gap: 10,
+    marginBottom: 20,
+  },
+  optionButton: {
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  selectedOption: {
+    backgroundColor: '#6366f1',
+    borderColor: '#6366f1',
+  },
+  optionText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  selectedOptionText: {
+    color: 'white',
+  },
+  inputContainer: {
     flexDirection: 'row',
-    gap: 8,
+    alignItems: 'center',
+    width: '100%',
+  },
+  input: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 20,
+    backgroundColor: 'white',
+    marginRight: 8,
+    maxHeight: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  sendButton: {
+    padding: 8,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  nextButton: {
+    backgroundColor: '#6366f1',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    width: '100%',
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  nextButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
