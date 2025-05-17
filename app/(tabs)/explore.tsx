@@ -5,13 +5,6 @@ import { ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react
 import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 
-type Message = {
-  id: string;
-  text: string;
-  sender: 'user' | 'ai';
-  timestamp: Date;
-};
-
 type ProfileQuestion = {
   id: string;
   emoji: string;
@@ -26,6 +19,15 @@ type ProfileQuestion = {
 const profileQuestions: ProfileQuestion[] = [
   {
     id: '1',
+    emoji: '👤',
+    question: 'What is your name? ',
+    purpose: 'People will see this name on your profile.',
+    options: [],
+    multiSelect: false,
+    maxSelections: 1,
+  },
+  {
+    id: '2',
     emoji: '🔑',
     question: 'What are you looking for?',
     purpose: 'Establish intent compatibility.',
@@ -34,7 +36,7 @@ const profileQuestions: ProfileQuestion[] = [
     maxSelections: 2,
   },
   {
-    id: '2',
+    id: '3',
     emoji: '🧠',
     question: 'What are your core values?',
     purpose: 'Match based on life philosophy and beliefs.',
@@ -43,7 +45,7 @@ const profileQuestions: ProfileQuestion[] = [
     maxSelections: 3,
   },
   {
-    id: '3',
+    id: '4',
     emoji: '🗓️',
     question: 'What does a typical weekend look like for you?',
     purpose: 'Gauge lifestyle and activity compatibility.',
@@ -52,7 +54,7 @@ const profileQuestions: ProfileQuestion[] = [
     maxSelections: 3,
   },
   {
-    id: '4',
+    id: '5',
     emoji: '💼',
     question: 'What best describes your current lifestyle?',
     purpose: 'Helps match by work-life balance and stability.',
@@ -61,7 +63,7 @@ const profileQuestions: ProfileQuestion[] = [
     maxSelections: 2,
   },
   {
-    id: '5',
+    id: '6',
     emoji: '✝️',
     question: 'Do your faith or spiritual beliefs play a role in your life?',
     purpose: 'Crucial for value-aligned matching.',
@@ -69,7 +71,7 @@ const profileQuestions: ProfileQuestion[] = [
     multiSelect: false,
   },
   {
-    id: '6',
+    id: '7',
     emoji: '👪',
     question: 'Do you want kids (or more kids) someday?',
     purpose: 'Align future life goals.',
@@ -78,7 +80,7 @@ const profileQuestions: ProfileQuestion[] = [
     maxSelections: 2,
   },
   {
-    id: '7',
+    id: '8',
     emoji: '🌍',
     question: 'Are you open to relocating for love?',
     purpose: 'Prevent geographic dealbreakers.',
@@ -86,7 +88,7 @@ const profileQuestions: ProfileQuestion[] = [
     multiSelect: false,
   },
   {
-    id: '8',
+    id: '9',
     emoji: '🤝',
     question: 'What are three things non-negotiable in a partner?',
     purpose: 'Allows AI to use user-defined dealbreakers in matching.',
@@ -99,8 +101,12 @@ export default function AIProfileCreationScreen() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [inputText, setInputText] = useState('');
+  const [nonNegotiables, setNonNegotiables] = useState<string[]>([]);
+  const [currentNonNegotiable, setCurrentNonNegotiable] = useState('');
 
   const currentQuestion = profileQuestions[currentQuestionIndex];
+  const isLastQuestion = currentQuestionIndex === profileQuestions.length - 1;
+  const isFirstQuestion = currentQuestionIndex === 0;
 
   const handleAnswer = (answer: string) => {
     if (currentQuestion.multiSelect) {
@@ -135,9 +141,35 @@ export default function AIProfileCreationScreen() {
   };
 
   const handleNext = () => {
-    if (currentQuestionIndex < profileQuestions.length - 1) {
+    if (isFirstQuestion && inputText.trim()) {
+      // Save name and move to next question
+      setAnswers(prev => ({
+        ...prev,
+        [currentQuestion.id]: inputText.trim()
+      }));
+      setInputText('');
+      setCurrentQuestionIndex(prev => prev + 1);
+    } else if (isLastQuestion && nonNegotiables.length > 0) {
+      // Save non-negotiables and submit
+      setAnswers(prev => ({
+        ...prev,
+        [currentQuestion.id]: nonNegotiables
+      }));
+      handleSubmit();
+    } else if (currentQuestion.multiSelect) {
       setCurrentQuestionIndex(prev => prev + 1);
     }
+  };
+
+  const handleNonNegotiableAdd = () => {
+    if (currentNonNegotiable.trim() && nonNegotiables.length < 3) {
+      setNonNegotiables(prev => [...prev, currentNonNegotiable.trim()]);
+      setCurrentNonNegotiable('');
+    }
+  };
+
+  const removeNonNegotiable = (index: number) => {
+    setNonNegotiables(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleCustomAnswer = () => {
@@ -154,20 +186,46 @@ export default function AIProfileCreationScreen() {
     return answer === option;
   };
 
+  const handleBack = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(prev => prev - 1);
+    }
+  };
+
+  const handleSubmit = () => {
+    // Here we'll handle generating the profile with AI
+    console.log('Generating profile with answers:', answers);
+    // TODO: Add AI profile generation logic
+  };
+
   return (
     <LinearGradient colors={["#f8fafc", "#e0e7ef", "#c7d2fe"]} style={styles.gradientBg}>
       <View style={styles.safeArea}>
-        <View style={styles.progressContainer}>
-          <ThemedText style={styles.progressText}>
-            {currentQuestionIndex + 1} of {profileQuestions.length}
-          </ThemedText>
-          <View style={styles.progressBar}>
-            <View 
-              style={[
-                styles.progressFill, 
-                { width: `${((currentQuestionIndex + 1) / profileQuestions.length) * 100}%` }
-              ]} 
+        {currentQuestionIndex > 0 && (
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={handleBack}
+          >
+            <IconSymbol
+              size={24}
+              name="chevron.left"
+              color="#6366f1"
             />
+          </TouchableOpacity>
+        )}
+        <View style={styles.header}>
+          <View style={styles.progressContainer}>
+            <ThemedText style={styles.progressText}>
+              {currentQuestionIndex + 1} of {profileQuestions.length}
+            </ThemedText>
+            <View style={styles.progressBar}>
+              <View 
+                style={[
+                  styles.progressFill, 
+                  { width: `${((currentQuestionIndex + 1) / profileQuestions.length) * 100}%` }
+                ]} 
+              />
+            </View>
           </View>
         </View>
 
@@ -182,12 +240,6 @@ export default function AIProfileCreationScreen() {
             </View>
             <ThemedText style={styles.question}>{currentQuestion.question}</ThemedText>
             <ThemedText style={styles.purpose}>{currentQuestion.purpose}</ThemedText>
-            
-            {currentQuestion.multiSelect && (
-              <ThemedText style={styles.selectionHint}>
-                Select up to {currentQuestion.maxSelections} options
-              </ThemedText>
-            )}
 
             {currentQuestion.options.length > 0 ? (
               <>
@@ -210,33 +262,102 @@ export default function AIProfileCreationScreen() {
                     </TouchableOpacity>
                   ))}
                 </View>
-                {currentQuestion.multiSelect && (
-                  <TouchableOpacity
-                    style={styles.nextButton}
-                    onPress={handleNext}
-                  >
-                    <ThemedText style={styles.nextButtonText}>Next</ThemedText>
-                  </TouchableOpacity>
-                )}
+                <TouchableOpacity
+                  style={[styles.navigationButton, styles.nextButton]}
+                  onPress={handleNext}
+                >
+                  <ThemedText style={styles.nextButtonText}>
+                    {isLastQuestion ? "Generate Your Profile" : "Next"}
+                  </ThemedText>
+                </TouchableOpacity>
               </>
             ) : (
-              <View style={styles.inputContainer}>
-                <TextInput
-                  style={styles.input}
-                  value={inputText}
-                  onChangeText={setInputText}
-                  placeholder="Type your answer..."
-                  placeholderTextColor="#808080"
-                  multiline
-                />
-                <TouchableOpacity onPress={handleCustomAnswer} style={styles.sendButton}>
-                  <IconSymbol
-                    size={24}
-                    name="arrow.up.circle.fill"
-                    color="#6366f1"
-                  />
-                </TouchableOpacity>
-              </View>
+              <>
+                {isLastQuestion ? (
+                  <View style={styles.nonNegotiablesContainer}>
+                    <View style={styles.inputRow}>
+                      <TextInput
+                        style={styles.input}
+                        value={currentNonNegotiable}
+                        onChangeText={setCurrentNonNegotiable}
+                        placeholder="Enter a non-negotiable..."
+                        placeholderTextColor="#808080"
+                        onSubmitEditing={handleNonNegotiableAdd}
+                        returnKeyType="done"
+                      />
+                      <TouchableOpacity 
+                        style={[styles.addButton, nonNegotiables.length >= 3 && styles.disabledButton]}
+                        onPress={handleNonNegotiableAdd}
+                        disabled={nonNegotiables.length >= 3}
+                      >
+                        <IconSymbol
+                          size={24}
+                          name="plus.circle.fill"
+                          color={nonNegotiables.length >= 3 ? "#999" : "#6366f1"}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                    
+                    <View style={styles.nonNegotiablesList}>
+                      {nonNegotiables.map((item, index) => (
+                        <View key={index} style={styles.nonNegotiableItem}>
+                          <ThemedText style={styles.nonNegotiableText}>{item}</ThemedText>
+                          <TouchableOpacity 
+                            onPress={() => removeNonNegotiable(index)}
+                            style={styles.removeButton}
+                          >
+                            <IconSymbol
+                              size={20}
+                              name="xmark.circle.fill"
+                              color="#ff4d4f"
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      ))}
+                    </View>
+                    
+                    {nonNegotiables.length > 0 && (
+                      <TouchableOpacity
+                        style={[styles.navigationButton, styles.nextButton]}
+                        onPress={handleNext}
+                      >
+                        <ThemedText style={styles.nextButtonText}>
+                          Generate Your Profile
+                        </ThemedText>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ) : (
+                  <>
+                    <View style={styles.inputContainer}>
+                      <TextInput
+                        style={styles.input}
+                        value={inputText}
+                        keyboardType="default"
+                        textContentType="name"
+                        onChangeText={setInputText}
+                        placeholder="Type your name..."
+                        placeholderTextColor="#808080"
+                        returnKeyType="done"
+                        onSubmitEditing={handleNext}
+                      />
+                    </View>
+                    <TouchableOpacity
+                      style={[
+                        styles.navigationButton,
+                        styles.nextButton,
+                        !inputText.trim() && styles.disabledButton
+                      ]}
+                      onPress={handleNext}
+                      disabled={!inputText.trim()}
+                    >
+                      <ThemedText style={styles.nextButtonText}>
+                        Next
+                      </ThemedText>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </>
             )}
           </View>
         </ScrollView>
@@ -253,9 +374,17 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 60, // Adjust for iPhone notch
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingBottom: 5,
+  },
+  backButton: {
+    padding: 8,
+    marginRight: 12,
+  },
   progressContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 10,
+    flex: 1,
   },
   progressText: {
     fontSize: 14,
@@ -371,18 +500,71 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  nextButton: {
-    backgroundColor: '#6366f1',
+  navigationButton: {
+    width: '100%',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
-    width: '100%',
-    marginTop: 10,
-    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    marginTop: 20,
+  },
+  nextButton: {
+    backgroundColor: '#6366f1',
   },
   nextButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 16,
+  },
+  addButton: {
+    padding: 8,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  nonNegotiablesContainer: {
+    width: '100%',
+  },
+  nonNegotiablesList: {
+    gap: 8,
+    marginBottom: 20,
+  },
+  nonNegotiableItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    padding: 12,
+    borderRadius: 12,
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  nonNegotiableText: {
+    fontSize: 16,
+    flex: 1,
+    marginRight: 8,
+  },
+  removeButton: {
+    padding: 4,
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
 });
