@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
+import { supabase } from '../lib/supabase';
 
 type ProfileQuestion = {
   id: string;
@@ -200,13 +201,31 @@ export default function AIProfileCreationScreen() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Here we'll handle generating the profile with AI
     console.log('Generating profile with answers:', answers);
-    // TODO: Add AI profile generation logic
+    // Map onboarding answers to Supabase profile fields
+    const profile = {
+      username: answers['1'],
+      age: Number(answers['2']),
+      looking_for: answers['3'],
+      core_values: answers['4'],
+      weekend_activities: answers['5'],
+      lifestyle: answers['6'],
+      faith_importance: answers['7'],
+      kids_preference: answers['8'],
+      relocation: answers['9'],
+      non_negotiables: answers['10'],
+      // Add more fields if your Supabase table has them
+    };
+    const { error } = await supabase.from('profiles').insert([profile]);
+    if (error) {
+      alert('Error creating profile: ' + error.message);
+      return;
+    }
     AsyncStorage.setItem('onboarding-complete', 'true');
     AsyncStorage.setItem('profile-data', JSON.stringify(answers));
-    router.replace('/(tabs)');
+    router.replace({ pathname: '/' });
   };
 
   return (

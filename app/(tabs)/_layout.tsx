@@ -1,5 +1,7 @@
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { AntDesign } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import React from 'react';
 
 export default function TabsLayout() {
   return (
@@ -40,6 +42,13 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <IconSymbol name="person.fill" size={size} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile-create"
+        options={{
+          title: 'Create Profile',
+          tabBarIcon: ({ color }) => <AntDesign name="user" size={28} color={color} />,
         }}
       />
     </Tabs>
