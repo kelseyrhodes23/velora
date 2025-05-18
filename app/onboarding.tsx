@@ -1,9 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router } from 'expo-router';
 
 type ProfileQuestion = {
   id: string;
@@ -28,6 +31,15 @@ const profileQuestions: ProfileQuestion[] = [
   },
   {
     id: '2',
+    emoji: '👤',
+    question: 'What is your age? ',
+    purpose: 'People will see this age on your profile.',
+    options: [],
+    multiSelect: false,
+    maxSelections: 1,
+  },
+  {
+    id: '3',
     emoji: '🔑',
     question: 'What are you looking for?',
     purpose: 'Establish intent compatibility.',
@@ -36,7 +48,7 @@ const profileQuestions: ProfileQuestion[] = [
     maxSelections: 2,
   },
   {
-    id: '3',
+    id: '4',
     emoji: '🧠',
     question: 'What are your core values?',
     purpose: 'Match based on life philosophy and beliefs.',
@@ -45,7 +57,7 @@ const profileQuestions: ProfileQuestion[] = [
     maxSelections: 3,
   },
   {
-    id: '4',
+    id: '5',
     emoji: '🗓️',
     question: 'What does a typical weekend look like for you?',
     purpose: 'Gauge lifestyle and activity compatibility.',
@@ -54,7 +66,7 @@ const profileQuestions: ProfileQuestion[] = [
     maxSelections: 3,
   },
   {
-    id: '5',
+    id: '6',
     emoji: '💼',
     question: 'What best describes your current lifestyle?',
     purpose: 'Helps match by work-life balance and stability.',
@@ -63,15 +75,16 @@ const profileQuestions: ProfileQuestion[] = [
     maxSelections: 2,
   },
   {
-    id: '6',
+    id: '7',
     emoji: '✝️',
     question: 'Do your faith or spiritual beliefs play a role in your life?',
     purpose: 'Crucial for value-aligned matching.',
     options: ['Very important', 'Somewhat important', 'Not important', 'Prefer not to say'],
-    multiSelect: false,
+    multiSelect: true,
+    maxSelections: 1,
   },
   {
-    id: '7',
+    id: '8',
     emoji: '👪',
     question: 'Do you want kids (or more kids) someday?',
     purpose: 'Align future life goals.',
@@ -80,15 +93,16 @@ const profileQuestions: ProfileQuestion[] = [
     maxSelections: 2,
   },
   {
-    id: '8',
+    id: '9',
     emoji: '🌍',
     question: 'Are you open to relocating for love?',
     purpose: 'Prevent geographic dealbreakers.',
     options: ['Yes', 'Maybe', 'No'],
-    multiSelect: false,
+    multiSelect: true,
+    maxSelections: 1,
   },
   {
-    id: '9',
+    id: '10',
     emoji: '🤝',
     question: 'What are three things non-negotiable in a partner?',
     purpose: 'Allows AI to use user-defined dealbreakers in matching.',
@@ -156,7 +170,7 @@ export default function AIProfileCreationScreen() {
         [currentQuestion.id]: nonNegotiables
       }));
       handleSubmit();
-    } else if (currentQuestion.multiSelect) {
+    } else {
       setCurrentQuestionIndex(prev => prev + 1);
     }
   };
@@ -170,12 +184,6 @@ export default function AIProfileCreationScreen() {
 
   const removeNonNegotiable = (index: number) => {
     setNonNegotiables(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleCustomAnswer = () => {
-    if (!inputText.trim()) return;
-    handleAnswer(inputText);
-    setInputText('');
   };
 
   const isOptionSelected = (option: string) => {
@@ -196,11 +204,14 @@ export default function AIProfileCreationScreen() {
     // Here we'll handle generating the profile with AI
     console.log('Generating profile with answers:', answers);
     // TODO: Add AI profile generation logic
+    AsyncStorage.setItem('onboarding-complete', 'true');
+    AsyncStorage.setItem('profile-data', JSON.stringify(answers));
+    router.replace('/(tabs)');
   };
 
   return (
     <LinearGradient colors={["#f8fafc", "#e0e7ef", "#c7d2fe"]} style={styles.gradientBg}>
-      <View style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea}>
         {currentQuestionIndex > 0 && (
           <TouchableOpacity
             style={styles.backButton}
@@ -333,35 +344,41 @@ export default function AIProfileCreationScreen() {
                       <TextInput
                         style={styles.input}
                         value={inputText}
-                        keyboardType="default"
-                        textContentType="name"
+                        keyboardType={currentQuestion.id === '2' ? "numeric" : "default"}
+                        textContentType={currentQuestion.id === '1' ? "name" : undefined}
                         onChangeText={setInputText}
-                        placeholder="Type your name..."
+                        placeholder={currentQuestion.id === '2' ? "Enter your age..." : "Type your name..."}
                         placeholderTextColor="#808080"
                         returnKeyType="done"
                         onSubmitEditing={handleNext}
+                        maxLength={currentQuestion.id === '2' ? 2 : undefined}
                       />
                     </View>
                     <TouchableOpacity
                       style={[
                         styles.navigationButton,
                         styles.nextButton,
-                        !inputText.trim() && styles.disabledButton
+                        (!inputText.trim() || (currentQuestion.id === '2' && (parseInt(inputText) < 18 || parseInt(inputText) > 99))) && styles.disabledButton
                       ]}
                       onPress={handleNext}
-                      disabled={!inputText.trim()}
+                      disabled={!inputText.trim() || (currentQuestion.id === '2' && (parseInt(inputText) < 18 || parseInt(inputText) > 99))}
                     >
                       <ThemedText style={styles.nextButtonText}>
                         Next
                       </ThemedText>
                     </TouchableOpacity>
+                    {currentQuestion.id === '2' && inputText && (parseInt(inputText) < 18 || parseInt(inputText) > 99) && (
+                      <ThemedText style={styles.errorText}>
+                        Please enter an age between 18 and 99
+                      </ThemedText>
+                    )}
                   </>
                 )}
               </>
             )}
           </View>
         </ScrollView>
-      </View>
+      </SafeAreaView>
     </LinearGradient>
   );
 }
@@ -372,16 +389,17 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    paddingTop: 60, // Adjust for iPhone notch
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 20,
     paddingBottom: 5,
   },
   backButton: {
     padding: 8,
-    marginRight: 12,
+    marginLeft: 12,
+    marginBottom: 5,
   },
   progressContainer: {
     flex: 1,
@@ -432,6 +450,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 10,
+    color: 'black',
   },
   purpose: {
     fontSize: 16,
@@ -560,11 +579,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     flex: 1,
     marginRight: 8,
+    color: 'black',
   },
   removeButton: {
     padding: 4,
   },
   disabledButton: {
     opacity: 0.5,
+  },
+  errorText: {
+    color: '#ff4d4f',
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: 'center',
   },
 });
