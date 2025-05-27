@@ -42,6 +42,15 @@ const profileQuestions: ProfileQuestion[] = [
   {
     id: '3',
     emoji: '🔑',
+    question: 'What is your gender?',
+    purpose: 'People will see this gender on your profile.',
+    options: ['Male', 'Female', 'Non-binary', 'Prefer not to say'],
+    multiSelect: false,
+    maxSelections: 1,
+  },
+  {
+    id: '4',
+    emoji: '🔑',
     question: 'What are you looking for?',
     purpose: 'Establish intent compatibility.',
     options: ['Long-term relationship', 'Marriage', 'Casual dating', 'Friendship', 'Not sure yet'],
@@ -49,7 +58,7 @@ const profileQuestions: ProfileQuestion[] = [
     maxSelections: 2,
   },
   {
-    id: '4',
+    id: '5',
     emoji: '🧠',
     question: 'What are your core values?',
     purpose: 'Match based on life philosophy and beliefs.',
@@ -58,7 +67,7 @@ const profileQuestions: ProfileQuestion[] = [
     maxSelections: 3,
   },
   {
-    id: '5',
+    id: '6',
     emoji: '🗓️',
     question: 'What does a typical weekend look like for you?',
     purpose: 'Gauge lifestyle and activity compatibility.',
@@ -67,7 +76,7 @@ const profileQuestions: ProfileQuestion[] = [
     maxSelections: 3,
   },
   {
-    id: '6',
+    id: '7',
     emoji: '💼',
     question: 'What best describes your current lifestyle?',
     purpose: 'Helps match by work-life balance and stability.',
@@ -76,7 +85,7 @@ const profileQuestions: ProfileQuestion[] = [
     maxSelections: 2,
   },
   {
-    id: '7',
+    id: '8',
     emoji: '✝️',
     question: 'Do your faith or spiritual beliefs play a role in your life?',
     purpose: 'Crucial for value-aligned matching.',
@@ -85,7 +94,7 @@ const profileQuestions: ProfileQuestion[] = [
     maxSelections: 1,
   },
   {
-    id: '8',
+    id: '9',
     emoji: '👪',
     question: 'Do you want kids (or more kids) someday?',
     purpose: 'Align future life goals.',
@@ -94,7 +103,7 @@ const profileQuestions: ProfileQuestion[] = [
     maxSelections: 2,
   },
   {
-    id: '9',
+    id: '10',
     emoji: '🌍',
     question: 'Are you open to relocating for love?',
     purpose: 'Prevent geographic dealbreakers.',
@@ -103,7 +112,7 @@ const profileQuestions: ProfileQuestion[] = [
     maxSelections: 1,
   },
   {
-    id: '10',
+    id: '11',
     emoji: '🤝',
     question: 'What are three things non-negotiable in a partner?',
     purpose: 'Allows AI to use user-defined dealbreakers in matching.',
@@ -208,16 +217,16 @@ export default function AIProfileCreationScreen() {
     const profile = {
       username: answers['1'],
       age: Number(answers['2']) || 0,
-      looking_for: answers['3'],
-      core_values: answers['4'],
-      weekend_activities: answers['5'],
-      lifestyle: answers['6'],
-      faith_importance: answers['7'],
-      kids_preference: answers['8'],
-      relocation: answers['9'],
-      non_negotiables: answers['10'],
+      gender: answers['3'],
+      looking_for: answers['4'],
+      core_values: answers['5'],
+      weekend_activities: answers['6'],
+      lifestyle: answers['7'],
+      faith_importance: answers['8'],
+      kids_preference: answers['9'],
+      relocation: answers['10'],
+      non_negotiables: answers['11'],
       email: 'test@test.com',
-      gender: 'male',
       // Add more fields if your Supabase table has them
     };
     const { error } = await supabase.from('profiles').insert([profile]);
