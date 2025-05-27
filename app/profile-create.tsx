@@ -2,8 +2,8 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import React, { useState } from 'react';
 import { ActivityIndicator, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { supabase } from '../lib/supabase';
-import { uploadProfilePhoto } from '../lib/uploadProfilePhoto';
+import { supabase } from './lib/supabase';
+import { uploadProfilePhoto } from './lib/uploadProfilePhoto';
 
 function useUserLocation() {
   const [location, setLocation] = useState<string | null>(null);

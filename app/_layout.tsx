@@ -10,6 +10,7 @@ export default function RootLayout() {
     checkOnboarding();
   }, []);
 
+  
   const checkOnboarding = async () => {
     const onboardingComplete = await AsyncStorage.getItem('onboarding-complete');
     if (!onboardingComplete) {

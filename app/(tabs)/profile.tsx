@@ -1,11 +1,11 @@
+import { supabase } from '@/app/lib/supabase';
+import { ThemedText } from '@/components/ThemedText';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-
-import { ThemedText } from '@/components/ThemedText';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 
 type ProfileData = {
   '1': string; // name
@@ -29,6 +29,8 @@ export default function ProfileScreen() {
   const loadProfile = async () => {
     try {
       const data = await AsyncStorage.getItem('profile-data');
+      const { data: profileData } = await supabase.from('profiles').select('');
+      console.log(" This is the profile data -- ", profileData)
       if (data) {
         setProfileData(JSON.parse(data));
       }

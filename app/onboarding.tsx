@@ -3,11 +3,11 @@ import React, { useState } from 'react';
 import { ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { supabase } from '@/app/lib/supabase';
 import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import { supabase } from '../lib/supabase';
 
 type ProfileQuestion = {
   id: string;
@@ -207,7 +207,7 @@ export default function AIProfileCreationScreen() {
     // Map onboarding answers to Supabase profile fields
     const profile = {
       username: answers['1'],
-      age: Number(answers['2']),
+      age: Number(answers['2']) || 0,
       looking_for: answers['3'],
       core_values: answers['4'],
       weekend_activities: answers['5'],
@@ -216,6 +216,8 @@ export default function AIProfileCreationScreen() {
       kids_preference: answers['8'],
       relocation: answers['9'],
       non_negotiables: answers['10'],
+      email: 'test@test.com',
+      gender: 'male',
       // Add more fields if your Supabase table has them
     };
     const { error } = await supabase.from('profiles').insert([profile]);
@@ -225,7 +227,7 @@ export default function AIProfileCreationScreen() {
     }
     AsyncStorage.setItem('onboarding-complete', 'true');
     AsyncStorage.setItem('profile-data', JSON.stringify(answers));
-    router.replace({ pathname: '/' });
+    router.replace("/(tabs)");
   };
 
   return (
